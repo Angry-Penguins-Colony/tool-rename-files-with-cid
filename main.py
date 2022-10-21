@@ -1,6 +1,6 @@
 import argparse, os
 import shutil
-from progress.bar import Bar
+from tqdm import tqdm
 
 def main():
     def get_cid(path):
@@ -10,6 +10,16 @@ def main():
         script_dir = os.path.dirname(__file__)
         return  os.path.normpath(os.path.join(script_dir, string))
 
+    def rename_and_copy(file):
+        extension_file = os.path.splitext(file)[1]
+
+        input_path = os.path.join(args.fromDir, file)
+        hash = get_cid(input_path)
+
+        output_filename = hash.strip() + extension_file
+        output_path = os.path.join(args.outputDir, output_filename)
+        
+        shutil.copyfile(input_path, output_path)
 
     parser = argparse.ArgumentParser(description='Copy file in a directory and rename them with their IPFS CIDv0.')
     parser.add_argument('--fromDir', required=True, type=my_full_path)
@@ -24,23 +34,9 @@ def main():
 
     files = os.listdir(args.fromDir)
 
+    for file in tqdm(files):        
+        rename_and_copy(file)
 
-    progressBar = Bar('Processing', max=len(files))
-
-    for file in files:        
-
-        extension_file = os.path.splitext(file)[1]
-
-        input_path = os.path.join(args.fromDir, file)
-        hash = get_cid(input_path)
-
-        output_filename = hash.strip() + extension_file
-        output_path = os.path.join(args.outputDir, output_filename)
-        
-        shutil.copyfile(input_path, output_path)
-        progressBar.next()
-
-    progressBar.finish()
     print('Done.')
 
 if __name__ == '__main__':
